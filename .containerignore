@@ -1,0 +1,46 @@
+# Keep the image small and never bake local data or secrets into it.
+# (The Containerfile copies only app.py, database.py, healthcheck.py,
+#  requirements.txt, templates/ and static/ - this file also keeps
+#  everything else out of the build context sent to Podman.)
+
+# Virtual environments and caches
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Version control, editor and documentation files
+.git/
+.gitignore
+.vscode/
+.idea/
+README.md
+*.md
+
+# Tests and helper scripts (not needed at runtime)
+tests/
+*.ps1
+
+# Runtime data, databases and backups
+data/
+backups/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+*.bak
+
+# Secrets and local configuration
+secret_key
+.env
+.env.*
+
+# Archives and logs
+*.tar
+*.tar.gz
+*.log

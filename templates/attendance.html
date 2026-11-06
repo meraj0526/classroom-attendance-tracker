@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Mark Attendance{% endblock %}
+{% block heading %}Mark Attendance{% endblock %}
+{% block subheading %}Select a class and date, then mark each student present or absent{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+  <div class="card-body">
+    <form method="get" action="{{ url_for('attendance') }}" class="row g-2 align-items-end" id="class-picker">
+      <div class="col-12 col-md-5">
+        <label for="subject" class="form-label">Subject</label>
+        <select class="form-select" id="subject" name="subject" required>
+          <option value="">Select subject</option>
+          {% for sub in subjects %}
+            <option value="{{ sub }}" {% if sub == subject %}selected{% endif %}>{{ sub }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-md-2">
+        <label for="section" class="form-label">Section</label>
+        <select class="form-select" id="section" name="section" required data-selected="{{ section }}">
+          <option value="">Select</option>
+          {% for sec in class_map.get(subject, []) %}
+            <option value="{{ sec }}" {% if sec == section %}selected{% endif %}>{{ sec }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-md-3">
+        <label for="date" class="form-label">Date</label>
+        <input type="date" class="form-control" id="date" name="date" value="{{ date_str }}" max="{{ today }}" required>
+      </div>
+      <div class="col-12 col-md-2">
+        <button type="submit" class="btn btn-primary w-100"><i class="bi bi-people"></i> Load Students</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if loaded and students %}
+  {% if session %}
+    <div class="alert alert-warning d-flex gap-2 align-items-start">
+      <i class="bi bi-exclamation-circle-fill fs-5"></i>
+      <div>
+        Attendance for <strong>{{ subject }} &ndash; Section {{ section }}</strong> on <strong>{{ date_str }}</strong>
+        was already recorded. The saved values are shown below. Saving again will <strong>update</strong>
+        the existing records &ndash; duplicate entries are never created.
+      </div>
+    </div>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('save_attendance') }}" id="attendance-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="subject" value="{{ subject }}">
+    <input type="hidden" name="section" value="{{ section }}">
+    <input type="hidden" name="date" value="{{ date_str }}">
+
+    <div class="card">
+      <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span>{{ subject }} &middot; Section {{ section }} &middot; {{ date_str }}</span>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+          <span class="badge text-bg-success" id="present-count">0 present</span>
+          <span class="badge text-bg-danger" id="absent-count">0 absent</span>
+          <button type="button" class="btn btn-sm btn-outline-success" data-mark-all="Present">
+            <i class="bi bi-check-all"></i> All Present
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-danger" data-mark-all="Absent">
+            <i class="bi bi-x-circle"></i> All Absent
+          </button>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>#</th><th>Roll No</th><th>Name</th><th class="text-end">Status</th></tr></thead>
+            <tbody>
+              {% for s in students %}
+                {% set status = existing.get(s.id, 'Present') %}
+                <tr class="attendance-row">
+                  <td class="text-muted">{{ loop.index }}</td>
+                  <td class="fw-semibold">{{ s.roll_no }}</td>
+                  <td>{{ s.name }}</td>
+                  <td class="text-end">
+                    <div class="btn-group" role="group" aria-label="Status for {{ s.name }}">
+                      <input type="radio" class="btn-check status-input" name="status_{{ s.id }}" id="p{{ s.id }}"
+                             value="Present" autocomplete="off" {% if status == 'Present' %}checked{% endif %}>
+                      <label class="btn btn-sm btn-outline-success" for="p{{ s.id }}"><i class="bi bi-check-lg"></i> Present</label>
+                      <input type="radio" class="btn-check status-input" name="status_{{ s.id }}" id="a{{ s.id }}"
+                             value="Absent" autocomplete="off" {% if status == 'Absent' %}checked{% endif %}>
+                      <label class="btn btn-sm btn-outline-danger" for="a{{ s.id }}"><i class="bi bi-x-lg"></i> Absent</label>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-footer d-flex flex-wrap gap-2 justify-content-end">
+        {% if session %}
+          <a href="{{ url_for('session_view', session_id=session.id) }}" class="btn btn-outline-secondary">
+            <i class="bi bi-eye"></i> View Saved Session
+          </a>
+        {% endif %}
+        <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i>
+          {{ 'Update Attendance' if session else 'Save Attendance' }}</button>
+      </div>
+    </div>
+  </form>
+{% elif not loaded %}
+  <div class="card">
+    <div class="card-body empty-state py-5">
+      <i class="bi bi-check2-square display-6 text-primary d-block mb-2"></i>
+      Choose a subject, section and date above, then click <strong>Load Students</strong>.
+    </div>
+  </div>
+{% endif %}
+
+<script type="application/json" id="class-map">{{ class_map|tojson }}</script>
+{% endblock %}

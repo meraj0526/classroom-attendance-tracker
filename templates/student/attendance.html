@@ -1,0 +1,54 @@
+{% extends "student/base.html" %}
+{% block title %}My Attendance{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+  <div>
+    <h1 class="page-title">Attendance History</h1>
+    <p class="page-subtitle mb-0">Every class recorded for {{ current_user.name }} ({{ current_user.roll_no }})</p>
+  </div>
+  <div class="d-flex gap-2">
+    <span class="badge text-bg-success fs-6"><i class="bi bi-check-lg"></i> {{ present }} present</span>
+    <span class="badge text-bg-danger fs-6"><i class="bi bi-x-lg"></i> {{ absent }} absent</span>
+  </div>
+</div>
+
+<!-- Subject filter: only the student's own subjects are offered -->
+<div class="subject-filter mb-3" role="group" aria-label="Filter by subject">
+  <a href="{{ url_for('student_attendance') }}" class="btn btn-sm {{ 'btn-primary' if not subject else 'btn-outline-primary' }}">All subjects</a>
+  {% for sub in my_subjects %}
+    <a href="{{ url_for('student_attendance', subject=sub) }}"
+       class="btn btn-sm {{ 'btn-primary' if sub == subject else 'btn-outline-primary' }}">{{ sub }}</a>
+  {% endfor %}
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    {% if history %}
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead><tr><th>#</th><th>Date</th><th>Day</th><th>Subject</th><th>Section</th><th class="text-end">Status</th></tr></thead>
+          <tbody>
+            {% for h in history %}
+              <tr class="{{ 'row-present' if h.status == 'Present' else 'row-absent' }}">
+                <td class="text-muted">{{ loop.index }}</td>
+                <td class="fw-semibold">{{ h.session_date }}</td>
+                <td class="weekday" data-date="{{ h.session_date }}"></td>
+                <td>{{ h.subject }}</td>
+                <td>{{ h.section }}</td>
+                <td class="text-end">
+                  {% if h.status == 'Present' %}<span class="badge text-bg-success"><i class="bi bi-check-lg"></i> Present</span>
+                  {% else %}<span class="badge text-bg-danger"><i class="bi bi-x-lg"></i> Absent</span>{% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="empty-state m-4">No attendance records yet{% if subject %} for {{ subject }}{% endif %}.</p>
+    {% endif %}
+  </div>
+</div>
+<p class="text-muted small mt-3"><i class="bi bi-lock"></i> This page is read-only. If a record looks wrong, contact your teacher.</p>
+{% endblock %}

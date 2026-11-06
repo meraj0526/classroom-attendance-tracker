@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Add Student{% endblock %}
+{% block heading %}Add Student{% endblock %}
+{% block subheading %}Enrol a student in a subject and section{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-8 col-xl-6">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-person-plus text-primary"></i> Student details</div>
+      <div class="card-body">
+        <form method="post" action="{{ url_for('add_student') }}" class="needs-validation" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-3">
+            <label for="roll_no" class="form-label">Roll Number</label>
+            <input type="text" class="form-control text-uppercase" id="roll_no" name="roll_no"
+                   value="{{ form.roll_no }}" placeholder="e.g. CS23A021" required
+                   pattern="[A-Za-z0-9\/\-]{2,20}" maxlength="20" autofocus>
+            <div class="invalid-feedback">2-20 characters: letters, digits, - or /.</div>
+          </div>
+          <div class="mb-3">
+            <label for="name" class="form-label">Full Name</label>
+            <input type="text" class="form-control" id="name" name="name" value="{{ form.name }}"
+                   placeholder="e.g. Asha Verghese" required minlength="2" maxlength="80">
+            <div class="invalid-feedback">Please enter the student's name.</div>
+          </div>
+          <div class="row">
+            <div class="col-12 col-md-8 mb-3">
+              <label for="subject" class="form-label">Subject</label>
+              <input type="text" class="form-control" id="subject" name="subject" list="subject-list"
+                     value="{{ form.subject }}" placeholder="Choose or type a subject" required maxlength="80">
+              <datalist id="subject-list">
+                {% for sub in subjects %}<option value="{{ sub }}">{% endfor %}
+              </datalist>
+              <div class="invalid-feedback">Subject is required.</div>
+            </div>
+            <div class="col-12 col-md-4 mb-3">
+              <label for="section" class="form-label">Section</label>
+              <input type="text" class="form-control text-uppercase" id="section" name="section" list="section-list"
+                     value="{{ form.section }}" placeholder="e.g. A" required maxlength="10">
+              <datalist id="section-list">
+                {% for sec in sections %}<option value="{{ sec }}">{% endfor %}
+              </datalist>
+              <div class="invalid-feedback">Section is required.</div>
+            </div>
+          </div>
+          <fieldset class="portal-login-box mb-3">
+            <legend class="form-label mb-1"><i class="bi bi-key text-primary"></i> Student Portal login</legend>
+            <p class="form-text mt-0 mb-2">
+              Required for a <strong>new</strong> roll number. Leave blank when enrolling an existing
+              student in another subject &ndash; their current password is kept.
+            </p>
+            <div class="row">
+              <div class="col-12 col-md-6 mb-2">
+                <label for="password" class="form-label">Initial password</label>
+                <div class="input-group">
+                  <input type="password" class="form-control" id="password" name="password"
+                         minlength="8" maxlength="128" autocomplete="new-password" placeholder="Min 8, letters + digits">
+                  <button class="btn btn-outline-secondary" type="button" data-toggle-password="#password" aria-label="Show password"><i class="bi bi-eye"></i></button>
+                </div>
+              </div>
+              <div class="col-12 col-md-6 mb-2">
+                <label for="confirm_password" class="form-label">Confirm password</label>
+                <input type="password" class="form-control" id="confirm_password" name="confirm_password"
+                       minlength="8" maxlength="128" autocomplete="new-password">
+              </div>
+            </div>
+          </fieldset>
+          <div class="d-flex flex-wrap gap-2">
+            <button type="submit" name="action" value="save" class="btn btn-primary">
+              <i class="bi bi-save"></i> Save Student
+            </button>
+            <button type="submit" name="action" value="save_add_another" class="btn btn-outline-primary">
+              <i class="bi bi-plus-circle"></i> Save &amp; Add Another
+            </button>
+            <a href="{{ url_for('students') }}" class="btn btn-outline-secondary ms-auto">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+    <p class="text-muted small mt-3">
+      <i class="bi bi-info-circle"></i> A roll number can be enrolled in several subjects,
+      but only once per subject. Use fictional data for demos.
+    </p>
+  </div>
+</div>
+{% endblock %}

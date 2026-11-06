@@ -1,0 +1,213 @@
+{% extends "student/base.html" %}
+{% block title %}My Dashboard{% endblock %}
+
+{% block content %}
+<!-- A. Welcome -->
+<section class="welcome-banner mb-4">
+  <div>
+    <p class="welcome-kicker mb-1"><i class="bi bi-calendar3"></i> {{ today }}</p>
+    <h1 class="welcome-title">Welcome, {{ current_user.name }}</h1>
+    <p class="welcome-meta mb-0">
+      Roll No <strong>{{ current_user.roll_no }}</strong> &middot;
+      Section {{ current_user.sections|join(', ') }} &middot;
+      {{ current_user.subjects|length }} registered subject{{ '' if current_user.subjects|length == 1 else 's' }}
+    </p>
+  </div>
+  <div class="welcome-ring {{ 'ring-low' if overall.low else '' }}"
+       style="--pct: {{ overall.percentage or 0 }};" aria-label="Overall attendance">
+    <span>{% if overall.percentage is not none %}{{ overall.percentage }}%{% else %}&ndash;{% endif %}</span>
+    <small>overall</small>
+  </div>
+</section>
+
+<!-- E. Alerts -->
+{% if overall.total == 0 %}
+  <div class="alert alert-info d-flex gap-2"><i class="bi bi-info-circle-fill fs-5"></i>
+    <div>No attendance has been recorded for you yet. Check back after your teacher marks the first class.</div></div>
+{% elif overall.low %}
+  <div class="alert alert-danger attendance-alert d-flex gap-3" role="alert">
+    <i class="bi bi-exclamation-triangle-fill fs-3"></i>
+    <div>
+      <h2 class="h6 fw-bold mb-1">Your overall attendance is {{ overall.percentage }}% &ndash; below the required {{ threshold|int }}%.</h2>
+      {% if overall.needed is not none %}
+        <p class="mb-0">Attend the next <strong>{{ overall.needed }}</strong> class{{ '' if overall.needed == 1 else 'es' }} in a row to reach {{ threshold|int }}%.</p>
+      {% else %}
+        <p class="mb-0">{{ threshold|int }}% can no longer be reached mathematically. Please speak to your teacher.</p>
+      {% endif %}
+    </div>
+  </div>
+{% else %}
+  <div class="alert alert-success d-flex gap-3" role="status">
+    <i class="bi bi-emoji-smile-fill fs-3"></i>
+    <div>
+      <h2 class="h6 fw-bold mb-1">Great job! Your overall attendance is {{ overall.percentage }}%.</h2>
+      <p class="mb-0">You can miss up to <strong>{{ overall.can_miss }}</strong> class{{ '' if overall.can_miss == 1 else 'es' }}
+        and still stay at or above {{ threshold|int }}% overall.</p>
+    </div>
+  </div>
+{% endif %}
+
+{% if low_subjects %}
+  <div class="alert alert-warning" role="alert">
+    <h2 class="h6 fw-bold"><i class="bi bi-exclamation-circle-fill"></i> Subjects below {{ threshold|int }}%</h2>
+    <ul class="mb-0">
+      {% for s in low_subjects %}
+        <li><strong>{{ s.subject }}</strong>: {{ s.percentage }}% &ndash;
+          {% if s.needed is not none %}attend the next <strong>{{ s.needed }}</strong> class{{ '' if s.needed == 1 else 'es' }} to reach {{ threshold|int }}%.
+          {% else %}{{ threshold|int }}% is no longer reachable.{% endif %}</li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endif %}
+
+<!-- B. Summary cards -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-xl-3">
+    <div class="card stat-card h-100"><div class="card-body">
+      <div class="stat-icon {{ 'bg-danger-subtle text-danger' if overall.low else 'bg-primary-subtle text-primary' }}"><i class="bi bi-percent"></i></div>
+      <div><div class="stat-label">Overall Attendance</div>
+        <div class="stat-value {{ 'text-danger' if overall.low }}">{% if overall.percentage is not none %}{{ overall.percentage }}%{% else %}&ndash;{% endif %}</div></div>
+    </div></div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="card stat-card h-100"><div class="card-body">
+      <div class="stat-icon bg-info-subtle text-info-emphasis"><i class="bi bi-journal-bookmark-fill"></i></div>
+      <div><div class="stat-label">Classes Conducted</div><div class="stat-value">{{ overall.total }}</div></div>
+    </div></div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="card stat-card h-100"><div class="card-body">
+      <div class="stat-icon bg-success-subtle text-success"><i class="bi bi-check-circle-fill"></i></div>
+      <div><div class="stat-label">Classes Attended</div><div class="stat-value text-success">{{ overall.present }}</div></div>
+    </div></div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="card stat-card h-100"><div class="card-body">
+      <div class="stat-icon bg-danger-subtle text-danger"><i class="bi bi-x-circle-fill"></i></div>
+      <div><div class="stat-label">Classes Absent</div><div class="stat-value text-danger">{{ overall.absent }}</div></div>
+    </div></div>
+  </div>
+</div>
+
+<!-- C. Subject-wise attendance -->
+<div class="card mb-4">
+  <div class="card-header"><i class="bi bi-table text-primary"></i> Subject-wise Attendance</div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr><th>Subject</th><th class="text-center">Total Classes</th><th class="text-center">Present</th>
+              <th class="text-center">Absent</th><th style="min-width:170px">Attendance %</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          {% for s in subjects %}
+            <tr>
+              <td><div class="fw-semibold">{{ s.subject }}</div><small class="text-muted">Section {{ s.section }}</small></td>
+              <td class="text-center">{{ s.total }}</td>
+              <td class="text-center text-success fw-semibold">{{ s.present }}</td>
+              <td class="text-center text-danger fw-semibold">{{ s.absent }}</td>
+              <td>
+                {% if s.percentage is not none %}
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="progress flex-grow-1" role="progressbar" aria-valuenow="{{ s.percentage }}" aria-valuemin="0" aria-valuemax="100">
+                      <div class="progress-bar {{ 'bg-danger' if s.low else 'bg-success' }}" style="width: {{ s.percentage }}%"></div>
+                    </div>
+                    <small class="fw-semibold">{{ s.percentage }}%</small>
+                  </div>
+                {% else %}<small class="text-muted">No classes yet</small>{% endif %}
+              </td>
+              <td>
+                {% if s.percentage is none %}<span class="badge text-bg-secondary">Pending</span>
+                {% elif s.low %}<span class="badge text-bg-danger">Attend {{ s.needed if s.needed is not none else '&ndash;'|safe }} more</span>
+                {% else %}<span class="badge text-bg-success">On track</span>{% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- F. Charts -->
+<div class="row g-3 mb-4">
+  <div class="col-12 col-lg-8">
+    <div class="card h-100">
+      <div class="card-header">Subject-wise Attendance %</div>
+      <div class="card-body">
+        {% if overall.total %}<div class="chart-box"><canvas id="studentSubjectChart"></canvas></div>
+        {% else %}<p class="empty-state">The chart appears once attendance is recorded.</p>{% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-lg-4">
+    <div class="card h-100">
+      <div class="card-header">Present vs Absent</div>
+      <div class="card-body">
+        {% if overall.total %}<div class="chart-box"><canvas id="studentRatioChart"></canvas></div>
+        {% else %}<p class="empty-state">No classes recorded yet.</p>{% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- D. Recent attendance history -->
+  <div class="col-12 col-lg-7">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-clock-history text-primary"></i> Recent Attendance</span>
+        <a href="{{ url_for('student_attendance') }}" class="btn btn-sm btn-outline-primary">Full history</a>
+      </div>
+      <div class="card-body p-0">
+        {% if recent %}
+          <div class="table-responsive">
+            <table class="table align-middle mb-0">
+              <thead><tr><th>Date</th><th>Subject</th><th class="text-end">Status</th></tr></thead>
+              <tbody>
+                {% for h in recent %}
+                  <tr class="{{ 'row-present' if h.status == 'Present' else 'row-absent' }}">
+                    <td class="fw-semibold">{{ h.session_date }}</td>
+                    <td>{{ h.subject }}</td>
+                    <td class="text-end">
+                      {% if h.status == 'Present' %}<span class="badge text-bg-success"><i class="bi bi-check-lg"></i> Present</span>
+                      {% else %}<span class="badge text-bg-danger"><i class="bi bi-x-lg"></i> Absent</span>{% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="empty-state m-4">No attendance records yet.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- G. Profile -->
+  <div class="col-12 col-lg-5">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-person-badge text-primary"></i> My Profile</span>
+        <a href="{{ url_for('student_profile') }}" class="btn btn-sm btn-outline-primary">Open</a>
+      </div>
+      <div class="card-body">
+        <dl class="profile-list mb-0">
+          <dt>Name</dt><dd>{{ current_user.name }}</dd>
+          <dt>Roll Number</dt><dd>{{ current_user.roll_no }}</dd>
+          <dt>Section</dt><dd>{{ current_user.sections|join(', ') }}</dd>
+          <dt>Registered Subjects</dt>
+          <dd>
+            {% for e in current_user.subjects %}
+              <span class="badge rounded-pill text-bg-light border subject-pill">{{ e.subject }} ({{ e.section }})</span>
+            {% endfor %}
+          </dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="application/json" id="student-data">{{ chart_data|tojson }}</script>
+{% endblock %}

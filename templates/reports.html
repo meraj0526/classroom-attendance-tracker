@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block heading %}Attendance Reports{% endblock %}
+{% block subheading %}Attendance history, individual percentages and students below a threshold{% endblock %}
+
+{% block content %}
+<!-- Filters -->
+<div class="card mb-4">
+  <div class="card-body">
+    <form method="get" action="{{ url_for('reports') }}" class="row g-2 align-items-end">
+      <div class="col-12 col-md-4">
+        <label for="subject" class="form-label">Subject</label>
+        <select class="form-select" id="subject" name="subject">
+          <option value="">All subjects</option>
+          {% for sub in subjects %}
+            <option value="{{ sub }}" {% if sub == subject %}selected{% endif %}>{{ sub }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-md-2">
+        <label for="section" class="form-label">Section</label>
+        <select class="form-select" id="section" name="section">
+          <option value="">All</option>
+          {% for sec in sections %}
+            <option value="{{ sec }}" {% if sec == section %}selected{% endif %}>{{ sec }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-md-2">
+        <label for="threshold" class="form-label">Threshold %</label>
+        <input type="number" class="form-control" id="threshold" name="threshold"
+               min="0" max="100" step="1" value="{{ threshold|round(1) }}">
+      </div>
+      <div class="col-12 col-md-4 d-flex flex-wrap gap-2">
+        <button type="submit" class="btn btn-primary flex-grow-1"><i class="bi bi-funnel"></i> Apply</button>
+        <a href="{{ url_for('reports') }}" class="btn btn-outline-secondary">Reset</a>
+        <a href="{{ url_for('export_report', subject=subject, section=section, threshold=threshold) }}"
+           class="btn btn-outline-success"><i class="bi bi-download"></i> CSV</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Summary -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-xl-3">
+    <div class="card stat-card h-100"><div class="card-body">
+      <div class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-people-fill"></i></div>
+      <div><div class="stat-label">Students</div><div class="stat-value">{{ stats.total_students }}</div></div>
+    </div></div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="card stat-card h-100"><div class="card-body">
+      <div class="stat-icon bg-info-subtle text-info-emphasis"><i class="bi bi-calendar-check-fill"></i></div>
+      <div><div class="stat-label">Sessions</div><div class="stat-value">{{ stats.total_sessions }}</div></div>
+    </div></div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="card stat-card h-100"><div class="card-body">
+      <div class="stat-icon bg-success-subtle text-success"><i class="bi bi-graph-up-arrow"></i></div>
+      <div><div class="stat-label">Average</div>
+        <div class="stat-value">{% if stats.overall_percentage is not none %}{{ stats.overall_percentage }}%{% else %}&ndash;{% endif %}</div></div>
+    </div></div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="card stat-card h-100"><div class="card-body">
+      <div class="stat-icon bg-danger-subtle text-danger"><i class="bi bi-exclamation-triangle-fill"></i></div>
+      <div><div class="stat-label">Below {{ threshold|round(1) }}%</div><div class="stat-value text-danger">{{ low|length }}</div></div>
+    </div></div>
+  </div>
+</div>
+
+<!-- Tabs -->
+<ul class="nav nav-tabs report-tabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-students" type="button" role="tab">
+      <i class="bi bi-person-lines-fill"></i> Student Percentages
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-low" type="button" role="tab">
+      <i class="bi bi-exclamation-triangle"></i> Below Threshold <span class="badge text-bg-danger">{{ low|length }}</span>
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-history" type="button" role="tab">
+      <i class="bi bi-clock-history"></i> Attendance History
+    </button>
+  </li>
+</ul>
+
+<div class="tab-content card border-top-0 rounded-top-0">
+  <!-- Individual percentages -->
+  <div class="tab-pane fade show active" id="tab-students" role="tabpanel">
+    <div class="card-body">
+      {% if chart_data["values"] %}
+        <div class="chart-box chart-box-tall mb-3"><canvas id="studentChart"></canvas></div>
+      {% endif %}
+      {% if rows %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr><th>Roll No</th><th>Name</th><th>Subject</th><th>Sec</th>
+                  <th class="text-center">Sessions</th><th class="text-center">Present</th>
+                  <th class="text-center">Absent</th><th style="min-width:150px">Attendance %</th></tr>
+            </thead>
+            <tbody>
+              {% for r in rows %}
+                <tr class="{% if r.percentage is not none and r.percentage < threshold %}table-danger{% endif %}">
+                  <td class="fw-semibold">{{ r.roll_no }}</td>
+                  <td>{{ r.name }}</td>
+                  <td>{{ r.subject }}</td>
+                  <td>{{ r.section }}</td>
+                  <td class="text-center">{{ r.total }}</td>
+                  <td class="text-center text-success">{{ r.present }}</td>
+                  <td class="text-center text-danger">{{ r.absent }}</td>
+                  <td>
+                    {% if r.percentage is not none %}
+                      <div class="d-flex align-items-center gap-2">
+                        <div class="progress flex-grow-1" role="progressbar" aria-valuenow="{{ r.percentage }}" aria-valuemin="0" aria-valuemax="100">
+                          <div class="progress-bar {{ 'bg-danger' if r.percentage < threshold else 'bg-success' }}" style="width: {{ r.percentage }}%"></div>
+                        </div>
+                        <small class="fw-semibold">{{ r.percentage }}%</small>
+                      </div>
+                    {% else %}<small class="text-muted">&ndash;</small>{% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="empty-state">No students for this filter.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Below threshold -->
+  <div class="tab-pane fade" id="tab-low" role="tabpanel">
+    <div class="card-body">
+      {% if low %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>Roll No</th><th>Name</th><th>Subject</th><th>Sec</th>
+                       <th class="text-center">Attended</th><th class="text-end">Attendance</th><th class="text-end">Shortfall</th></tr></thead>
+            <tbody>
+              {% for r in low %}
+                <tr>
+                  <td class="fw-semibold">{{ r.roll_no }}</td>
+                  <td>{{ r.name }}</td>
+                  <td>{{ r.subject }}</td>
+                  <td>{{ r.section }}</td>
+                  <td class="text-center">{{ r.present }} / {{ r.total }}</td>
+                  <td class="text-end"><span class="badge text-bg-danger">{{ r.percentage }}%</span></td>
+                  <td class="text-end text-danger">{{ (threshold - r.percentage)|round(1) }}%</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="empty-state"><i class="bi bi-emoji-smile"></i> No students are below {{ threshold|round(1) }}%.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="tab-pane fade" id="tab-history" role="tabpanel">
+    <div class="card-body">
+      {% if history %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>Date</th><th>Subject</th><th>Sec</th><th class="text-center">Present</th>
+                       <th class="text-center">Absent</th><th class="text-center">%</th><th class="text-end">Actions</th></tr></thead>
+            <tbody>
+              {% for se in history %}
+                <tr>
+                  <td class="fw-semibold">{{ se.session_date }}</td>
+                  <td>{{ se.subject }}</td>
+                  <td>{{ se.section }}</td>
+                  <td class="text-center text-success">{{ se.present }}</td>
+                  <td class="text-center text-danger">{{ se.absent }}</td>
+                  <td class="text-center">{% if se.percentage is not none %}{{ se.percentage }}%{% else %}&ndash;{% endif %}</td>
+                  <td class="text-end text-nowrap">
+                    <a href="{{ url_for('session_view', session_id=se.id) }}" class="btn btn-sm btn-outline-primary" title="View">
+                      <i class="bi bi-eye"></i></a>
+                    <a href="{{ url_for('attendance', subject=se.subject, section=se.section, date=se.session_date) }}"
+                       class="btn btn-sm btn-outline-secondary" title="Edit"><i class="bi bi-pencil"></i></a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="empty-state">No sessions recorded yet. <a href="{{ url_for('attendance') }}">Mark attendance</a>.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script type="application/json" id="report-data">{{ chart_data|tojson }}</script>
+{% endblock %}

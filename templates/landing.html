@@ -1,0 +1,147 @@
+{% extends "auth_base.html" %}
+{% block title %}Welcome{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero-blob hero-blob-1"></div>
+  <div class="hero-blob hero-blob-2"></div>
+  <div class="container position-relative">
+    <div class="text-center hero-text">
+      <span class="hero-badge"><i class="bi bi-patch-check-fill"></i> Flask &middot; SQLite &middot; Podman</span>
+      <h1 class="hero-title">Classroom Attendance Tracker</h1>
+      <p class="hero-subtitle">Smart, Simple and Transparent Attendance Management</p>
+    </div>
+
+    {% if current_role %}
+      <div class="signed-in-banner mx-auto">
+        <i class="bi bi-person-check-fill"></i>
+        <span>You are signed in as <strong>{{ current_user.name }}</strong> ({{ current_role|capitalize }}).</span>
+        <a href="{{ url_for('dashboard') if current_role == 'teacher' else url_for('student_dashboard') }}"
+           class="btn btn-sm btn-primary ms-sm-auto">Go to my dashboard</a>
+      </div>
+    {% endif %}
+
+    <div class="row g-4 justify-content-center role-row">
+      <!-- CARD 1: TEACHER -->
+      <div class="col-12 col-md-6 col-xl-5">
+        <div class="role-card h-100">
+          <div class="role-art role-art-teacher">
+            <svg viewBox="0 0 320 180" role="img" aria-label="Teacher presenting an attendance chart on a board">
+              <circle cx="46" cy="34" r="22" fill="#dbe7ff"/>
+              <circle cx="292" cy="150" r="16" fill="#dbe7ff"/>
+              <rect x="20" y="160" width="280" height="4" rx="2" fill="#c7d7f5"/>
+              <!-- board -->
+              <rect x="112" y="18" width="176" height="114" rx="10" fill="#ffffff" stroke="#c7d7f5" stroke-width="3"/>
+              <path d="M112 28a10 10 0 0 1 10-10h156a10 10 0 0 1 10 10v12H112z" fill="#2563eb"/>
+              <circle cx="126" cy="29" r="3" fill="#fff"/><circle cx="136" cy="29" r="3" fill="#fff" opacity=".7"/><circle cx="146" cy="29" r="3" fill="#fff" opacity=".45"/>
+              <rect x="130" y="92" width="16" height="28" rx="3" fill="#93b4f5"/>
+              <rect x="154" y="70" width="16" height="50" rx="3" fill="#2563eb"/>
+              <rect x="178" y="82" width="16" height="38" rx="3" fill="#93b4f5"/>
+              <rect x="202" y="58" width="16" height="62" rx="3" fill="#2563eb"/>
+              <path d="M134 84 L162 62 L186 74 L210 50" fill="none" stroke="#f59e0b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M234 58 l4 4 l8 -8" fill="none" stroke="#16a34a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              <rect x="250" y="55" width="26" height="6" rx="3" fill="#e2e8f0"/>
+              <path d="M234 78 l4 4 l8 -8" fill="none" stroke="#16a34a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              <rect x="250" y="75" width="22" height="6" rx="3" fill="#e2e8f0"/>
+              <path d="M235 95 l8 8 M243 95 l-8 8" stroke="#dc2626" stroke-width="3" stroke-linecap="round"/>
+              <rect x="250" y="96" width="24" height="6" rx="3" fill="#e2e8f0"/>
+              <rect x="196" y="132" width="8" height="28" fill="#c7d7f5"/>
+              <!-- teacher -->
+              <path d="M44 160 q0 -52 28 -56 q28 4 28 56z" fill="#0d2f6b"/>
+              <path d="M66 106 l6 10 l6 -10z" fill="#ffffff"/>
+              <path d="M92 120 L122 98" stroke="#0d2f6b" stroke-width="10" stroke-linecap="round"/>
+              <circle cx="124" cy="96" r="5.5" fill="#f1c7a3"/>
+              <circle cx="72" cy="84" r="17" fill="#f1c7a3"/>
+              <path d="M55 82 q2 -20 17 -20 q16 0 18 20 q-6 -10 -18 -10 q-11 0 -17 10z" fill="#1e293b"/>
+            </svg>
+          </div>
+          <div class="role-body">
+            <div class="role-icon role-icon-teacher"><i class="bi bi-person-video3"></i></div>
+            <h2 class="role-title">Teacher Portal</h2>
+            <p class="role-text">Manage students, mark attendance and generate attendance reports.</p>
+            <ul class="role-list">
+              <li><i class="bi bi-check-circle-fill"></i> Mark present / absent in seconds</li>
+              <li><i class="bi bi-check-circle-fill"></i> Reports, thresholds and CSV export</li>
+              <li><i class="bi bi-check-circle-fill"></i> Manage students and their logins</li>
+            </ul>
+            <a href="{{ url_for('teacher_login') }}" class="btn btn-primary btn-lg w-100 role-btn stretched-link">
+              Continue as Teacher <i class="bi bi-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 2: STUDENT -->
+      <div class="col-12 col-md-6 col-xl-5">
+        <div class="role-card h-100">
+          <div class="role-art role-art-student">
+            <svg viewBox="0 0 320 180" role="img" aria-label="Student checking their attendance percentage on a laptop">
+              <circle cx="276" cy="34" r="22" fill="#dbe7ff"/>
+              <circle cx="30" cy="140" r="14" fill="#dbe7ff"/>
+              <rect x="110" y="140" width="196" height="8" rx="4" fill="#c7d7f5"/>
+              <rect x="20" y="160" width="280" height="4" rx="2" fill="#c7d7f5"/>
+              <!-- laptop -->
+              <rect x="150" y="46" width="124" height="82" rx="8" fill="#0d2f6b"/>
+              <rect x="158" y="54" width="108" height="66" rx="4" fill="#ffffff"/>
+              <circle cx="190" cy="87" r="18" fill="none" stroke="#e2e8f0" stroke-width="8"/>
+              <circle cx="190" cy="87" r="18" fill="none" stroke="#2563eb" stroke-width="8" stroke-dasharray="96 114" stroke-linecap="round" transform="rotate(-90 190 87)"/>
+              <text x="190" y="91" text-anchor="middle" font-size="11" font-weight="700" fill="#0d2f6b" font-family="Segoe UI, Arial, sans-serif">85%</text>
+              <rect x="218" y="70" width="38" height="6" rx="3" fill="#93b4f5"/>
+              <rect x="218" y="83" width="28" height="6" rx="3" fill="#c7d7f5"/>
+              <rect x="218" y="96" width="34" height="6" rx="3" fill="#16a34a" opacity=".75"/>
+              <path d="M140 128 h144 l-10 12 h-124z" fill="#94a3b8"/>
+              <!-- student -->
+              <path d="M52 160 q0 -50 28 -54 q28 4 28 54z" fill="#2563eb"/>
+              <circle cx="80" cy="86" r="16" fill="#8d5a3b"/>
+              <path d="M64 84 q2 -16 16 -16 q14 0 16 16 q-6 -7 -16 -7 q-10 0 -16 7z" fill="#1e293b"/>
+              <polygon points="54,70 80,58 106,70 80,82" fill="#0d2f6b"/>
+              <rect x="70" y="70" width="20" height="9" rx="2" fill="#0d2f6b"/>
+              <path d="M106 70 v16" stroke="#f59e0b" stroke-width="2.5"/>
+              <circle cx="106" cy="88" r="3" fill="#f59e0b"/>
+              <rect x="90" y="118" width="36" height="26" rx="3" fill="#ffffff" stroke="#93b4f5" stroke-width="2"/>
+              <path d="M108 118 v26" stroke="#93b4f5" stroke-width="2"/>
+              <circle cx="292" cy="122" r="14" fill="#16a34a"/>
+              <path d="M285 122 l5 5 l9 -10" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="role-body">
+            <div class="role-icon role-icon-student"><i class="bi bi-mortarboard"></i></div>
+            <h2 class="role-title">Student Portal</h2>
+            <p class="role-text">View your attendance percentage, attendance history and subject-wise attendance.</p>
+            <ul class="role-list">
+              <li><i class="bi bi-check-circle-fill"></i> Overall and subject-wise percentage</li>
+              <li><i class="bi bi-check-circle-fill"></i> Date-wise present / absent history</li>
+              <li><i class="bi bi-check-circle-fill"></i> Alerts when you drop below 75%</li>
+            </ul>
+            <a href="{{ url_for('student_login') }}" class="btn btn-outline-primary btn-lg w-100 role-btn stretched-link">
+              Continue as Student <i class="bi bi-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature strip -->
+    <div class="row g-3 feature-row">
+      <div class="col-12 col-md-4">
+        <div class="feature-item">
+          <i class="bi bi-shield-lock-fill"></i>
+          <div><strong>Secure logins</strong><span>Hashed passwords and separate teacher / student sessions</span></div>
+        </div>
+      </div>
+      <div class="col-12 col-md-4">
+        <div class="feature-item">
+          <i class="bi bi-graph-up-arrow"></i>
+          <div><strong>Transparent records</strong><span>Students see exactly what the teacher recorded</span></div>
+        </div>
+      </div>
+      <div class="col-12 col-md-4">
+        <div class="feature-item">
+          <i class="bi bi-box-seam-fill"></i>
+          <div><strong>Container ready</strong><span>Runs in Podman with a persistent data volume</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

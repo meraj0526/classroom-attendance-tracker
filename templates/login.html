@@ -1,0 +1,104 @@
+{% extends "auth_base.html" %}
+{% set is_teacher = role == 'teacher' %}
+{% block title %}{{ 'Teacher' if is_teacher else 'Student' }} Login{% endblock %}
+
+{% block content %}
+<div class="container auth-wrapper">
+  <div class="card auth-card mx-auto">
+    <div class="row g-0">
+      <div class="col-md-5 auth-side {{ 'auth-side-teacher' if is_teacher else 'auth-side-student' }}">
+        <div class="auth-side-icon">
+          <i class="bi {{ 'bi-person-video3' if is_teacher else 'bi-mortarboard' }}"></i>
+        </div>
+        <h1 class="auth-side-title">{{ 'Teacher Portal' if is_teacher else 'Student Portal' }}</h1>
+        <p class="auth-side-text">
+          {% if is_teacher %}
+            Manage students, mark attendance and generate attendance reports.
+          {% else %}
+            View your attendance percentage, attendance history and subject-wise attendance.
+          {% endif %}
+        </p>
+        <ul class="auth-side-list">
+          {% if is_teacher %}
+            <li><i class="bi bi-check2"></i> Dashboard &amp; analytics</li>
+            <li><i class="bi bi-check2"></i> Attendance marking</li>
+            <li><i class="bi bi-check2"></i> Reports &amp; CSV export</li>
+          {% else %}
+            <li><i class="bi bi-check2"></i> Read-only, private to you</li>
+            <li><i class="bi bi-check2"></i> Subject-wise percentages</li>
+            <li><i class="bi bi-check2"></i> 75% attendance alerts</li>
+          {% endif %}
+        </ul>
+      </div>
+
+      <div class="col-md-7">
+        <div class="auth-form-area">
+          <h2 class="h4 fw-bold mb-1">Sign in</h2>
+          <p class="text-muted mb-4">
+            {{ 'Use your teacher username and password.' if is_teacher else 'Use your roll number and the password given by your teacher.' }}
+          </p>
+
+          <form method="post" action="{{ url_for('teacher_login' if is_teacher else 'student_login') }}"
+                class="needs-validation" novalidate autocomplete="on">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="next" value="{{ next_url }}">
+
+            {% if is_teacher %}
+              <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-person"></i></span>
+                  <input type="text" class="form-control" id="username" name="username" value="{{ identifier }}"
+                         required minlength="3" maxlength="40" pattern="[A-Za-z0-9_.\-]{3,40}"
+                         autocomplete="username" autofocus placeholder="e.g. teacher">
+                  <div class="invalid-feedback">Enter your username (3-40 letters, digits, . _ -).</div>
+                </div>
+              </div>
+            {% else %}
+              <div class="mb-3">
+                <label for="roll_no" class="form-label">Roll Number</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
+                  <input type="text" class="form-control text-uppercase" id="roll_no" name="roll_no" value="{{ identifier }}"
+                         required maxlength="20" pattern="[A-Za-z0-9\/\-]{2,20}"
+                         autocomplete="username" autofocus placeholder="e.g. CS23A001">
+                  <div class="invalid-feedback">Enter your roll number.</div>
+                </div>
+              </div>
+            {% endif %}
+
+            <div class="mb-4">
+              <label for="password" class="form-label">Password</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                <input type="password" class="form-control" id="password" name="password" required maxlength="128"
+                       autocomplete="current-password" placeholder="Your password">
+                <button class="btn btn-outline-secondary" type="button" data-toggle-password="#password"
+                        aria-label="Show password"><i class="bi bi-eye"></i></button>
+                <div class="invalid-feedback">Enter your password.</div>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg w-100">
+              <i class="bi bi-box-arrow-in-right"></i> Sign in as {{ 'Teacher' if is_teacher else 'Student' }}
+            </button>
+          </form>
+
+          <div class="d-flex flex-wrap justify-content-between gap-2 mt-4 small">
+            <a href="{{ url_for('landing') }}"><i class="bi bi-arrow-left"></i> Back to role selection</a>
+            {% if is_teacher %}
+              <a href="{{ url_for('student_login') }}">Are you a student? Student login</a>
+            {% else %}
+              <a href="{{ url_for('teacher_login') }}">Are you a teacher? Teacher login</a>
+            {% endif %}
+          </div>
+          {% if not is_teacher %}
+            <p class="text-muted small mt-3 mb-0"><i class="bi bi-info-circle"></i>
+              Forgot your password? Ask your teacher to reset it.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

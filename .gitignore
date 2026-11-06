@@ -1,0 +1,50 @@
+# ---------------------------------------------------------------------
+# Python virtual environments and caches
+# ---------------------------------------------------------------------
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ---------------------------------------------------------------------
+# Runtime data: the SQLite database and the generated session secret
+# must never be committed. Keep only the empty placeholder so the
+# folder exists in a fresh clone.
+# ---------------------------------------------------------------------
+data/*
+!data/.gitkeep
+
+# Databases, SQLite journals and backups anywhere in the project
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+backups/
+*.bak
+
+# ---------------------------------------------------------------------
+# Secrets and local configuration
+# .env holds your real passwords - only the placeholder template is public.
+# ---------------------------------------------------------------------
+secret_key
+.env
+.env.*
+!.env.example
+
+# ---------------------------------------------------------------------
+# Exported images, logs and OS/editor clutter
+# ---------------------------------------------------------------------
+*.tar
+*.tar.gz
+*.log
+Thumbs.db
+desktop.ini
+.DS_Store
+.idea/

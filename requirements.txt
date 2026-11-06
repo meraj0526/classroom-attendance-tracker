@@ -1,0 +1,6 @@
+Flask==3.0.3
+# Password hashing (generate_password_hash / check_password_hash). Installed with Flask anyway,
+# pinned here because app.py and database.py import it directly.
+Werkzeug==3.1.9
+# Production WSGI server used inside the container (Linux only - not needed on Windows)
+gunicorn==23.0.0; sys_platform != "win32"

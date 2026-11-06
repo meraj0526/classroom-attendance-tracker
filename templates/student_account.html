@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Student Account {{ profile.roll_no }}{% endblock %}
+{% block heading %}Student Account{% endblock %}
+{% block subheading %}{{ profile.name }} &middot; {{ profile.roll_no }}{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-12 col-lg-7">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-person-badge text-primary"></i> Profile &amp; enrolments</span>
+        <a href="{{ url_for('students', q=profile.roll_no) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+      </div>
+      <div class="card-body">
+        <dl class="profile-list">
+          <dt>Name</dt><dd>{{ profile.name }}</dd>
+          <dt>Roll Number</dt><dd>{{ profile.roll_no }}</dd>
+          <dt>Section</dt><dd>{{ profile.sections|join(', ') }}</dd>
+          <dt>Portal Login</dt>
+          <dd>{% if profile.has_account %}<span class="badge text-bg-success">Active</span>
+              {% else %}<span class="badge text-bg-secondary">No login yet</span>{% endif %}</dd>
+          <dt>Last Login</dt><dd>{{ profile.last_login or 'Never' }}</dd>
+        </dl>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead><tr><th>Subject</th><th>Sec</th><th class="text-center">Classes</th><th class="text-center">Present</th><th class="text-end">%</th></tr></thead>
+            <tbody>
+              {% for s in subjects %}
+                <tr>
+                  <td>{{ s.subject }}</td><td>{{ s.section }}</td>
+                  <td class="text-center">{{ s.total }}</td><td class="text-center">{{ s.present }}</td>
+                  <td class="text-end">{% if s.percentage is none %}-{% else %}
+                    <span class="badge {{ 'text-bg-danger' if s.percentage < threshold else 'text-bg-success' }}">{{ s.percentage }}%</span>{% endif %}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-5">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-key text-primary"></i>
+        {{ 'Reset Portal Password' if profile.has_account else 'Create Portal Login' }}</div>
+      <div class="card-body">
+        <form method="post" action="{{ url_for('student_account', roll_no=profile.roll_no) }}" class="needs-validation" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-3">
+            <label for="password" class="form-label">New password</label>
+            <div class="input-group">
+              <input type="password" class="form-control" id="password" name="password"
+                     required minlength="8" maxlength="128" autocomplete="new-password">
+              <button class="btn btn-outline-secondary" type="button" data-toggle-password="#password" aria-label="Show password"><i class="bi bi-eye"></i></button>
+            </div>
+            <div class="form-text">At least 8 characters, with letters and digits.</div>
+          </div>
+          <div class="mb-3">
+            <label for="confirm_password" class="form-label">Confirm password</label>
+            <input type="password" class="form-control" id="confirm_password" name="confirm_password"
+                   required minlength="8" maxlength="128" autocomplete="new-password">
+          </div>
+          <button type="submit" class="btn btn-primary w-100"><i class="bi bi-shield-lock"></i> Save Password</button>
+        </form>
+        <p class="small text-muted mt-3 mb-0"><i class="bi bi-info-circle"></i>
+          Passwords are stored as secure hashes. Nobody, including teachers, can read an existing password &ndash; it can only be reset.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

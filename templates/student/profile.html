@@ -1,0 +1,81 @@
+{% extends "student/base.html" %}
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<h1 class="page-title mb-1">My Profile</h1>
+<p class="page-subtitle mb-4">Your details as recorded by your teacher</p>
+
+<div class="row g-4">
+  <div class="col-12 col-lg-7">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center gap-3 mb-4">
+          <div class="profile-avatar">{{ current_user.name[:1] }}</div>
+          <div>
+            <h2 class="h4 fw-bold mb-0">{{ current_user.name }}</h2>
+            <span class="text-muted">{{ current_user.roll_no }}</span>
+          </div>
+        </div>
+        <dl class="profile-list">
+          <dt>Student Name</dt><dd>{{ current_user.name }}</dd>
+          <dt>Roll Number</dt><dd>{{ current_user.roll_no }}</dd>
+          <dt>Section</dt><dd>{{ current_user.sections|join(', ') }}</dd>
+          <dt>Enrolled Since</dt><dd>{{ current_user.enrolled_since[:10] }}</dd>
+          <dt>Last Login</dt><dd>{{ current_user.last_login or 'First login' }}</dd>
+        </dl>
+        <h3 class="h6 fw-bold mt-4">Registered Subjects</h3>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead><tr><th>Subject</th><th>Section</th><th class="text-end">Attendance</th></tr></thead>
+            <tbody>
+              {% for s in subjects %}
+                <tr>
+                  <td>{{ s.subject }}</td>
+                  <td>{{ s.section }}</td>
+                  <td class="text-end">
+                    {% if s.percentage is none %}<span class="text-muted">&ndash;</span>
+                    {% else %}<span class="badge {{ 'text-bg-danger' if s.low else 'text-bg-success' }}">{{ s.percentage }}%</span>{% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-5">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-key text-primary"></i> Change Password</div>
+      <div class="card-body">
+        <form method="post" action="{{ url_for('student_profile') }}" class="needs-validation" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-3">
+            <label for="current_password" class="form-label">Current password</label>
+            <input type="password" class="form-control" id="current_password" name="current_password"
+                   required maxlength="128" autocomplete="current-password">
+            <div class="invalid-feedback">Enter your current password.</div>
+          </div>
+          <div class="mb-3">
+            <label for="new_password" class="form-label">New password</label>
+            <input type="password" class="form-control" id="new_password" name="new_password"
+                   required minlength="8" maxlength="128" autocomplete="new-password">
+            <div class="form-text">At least 8 characters, with letters and digits.</div>
+          </div>
+          <div class="mb-3">
+            <label for="confirm_password" class="form-label">Confirm new password</label>
+            <input type="password" class="form-control" id="confirm_password" name="confirm_password"
+                   required minlength="8" maxlength="128" autocomplete="new-password">
+          </div>
+          <button type="submit" class="btn btn-primary w-100"><i class="bi bi-shield-lock"></i> Update Password</button>
+        </form>
+      </div>
+    </div>
+    <div class="alert alert-light border mt-3 small mb-0">
+      <i class="bi bi-info-circle text-primary"></i> Your name, roll number and subjects are managed by your teacher.
+      Students can view attendance but never mark or change it.
+    </div>
+  </div>
+</div>
+{% endblock %}
